@@ -2,9 +2,20 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 from app.config import OPENAI_API_KEY, CHAT_MODEL, EMBEDDING_MODEL, VECTORSTORE_PATH
+
+CONDENSE_TEMPLATE = """Given the following chat history and a follow-up question,
+rephrase the follow-up question to be a standalone question about Promtior.
+If the question is already standalone, return it unchanged.
+
+Chat History:
+{chat_history}
+
+Follow-up Question: {question}
+
+Standalone Question:"""
 
 PROMPT_TEMPLATE = """You are a helpful assistant for Promtior, an AI consulting company.
 Answer the question based only on the following context. If you cannot find
@@ -13,7 +24,7 @@ the answer in the context, say "I don't have that information."
 Context:
 {context}
 
-Question: {question}
+Question: {standalone_question}
 
 Answer:"""
 
@@ -36,18 +47,36 @@ def _format_docs(docs):
 
 
 def create_chain():
-    """Create the RAG chain using LCEL."""
+    """Create the RAG chain with conversational context using LCEL."""
     retriever = _get_retriever()
     llm = ChatOpenAI(
         model=CHAT_MODEL,
         openai_api_key=OPENAI_API_KEY,
         temperature=0,
     )
-    prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+
+    condense_prompt = ChatPromptTemplate.from_template(CONDENSE_TEMPLATE)
+    answer_prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+
+    # Condense chat_history + question into a standalone question
+    condense_chain = condense_prompt | llm | StrOutputParser()
+
+    # Use the standalone question to retrieve context and generate answer
+    def build_rag_input(standalone_question):
+        docs = retriever.invoke(standalone_question)
+        return {
+            "context": _format_docs(docs),
+            "standalone_question": standalone_question,
+        }
 
     chain = (
-        {"context": retriever | _format_docs, "question": RunnablePassthrough()}
-        | prompt
+        {
+            "question": lambda x: x["question"],
+            "chat_history": lambda x: x.get("chat_history", ""),
+        }
+        | condense_chain
+        | RunnableLambda(build_rag_input)
+        | answer_prompt
         | llm
         | StrOutputParser()
     )
