@@ -28,7 +28,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"input\": \"What services does Promtior offer?\"\n}"
+							"raw": "{\n    \"input\": {\n        \"question\": \"What services does Promtior offer?\",\n        \"chat_history\": \"\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/chat/invoke",
@@ -49,7 +49,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"input\": \"When was the company founded?\"\n}"
+							"raw": "{\n    \"input\": {\n        \"question\": \"When was the company founded?\",\n        \"chat_history\": \"\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/chat/invoke",
@@ -70,7 +70,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"input\": \"\"\n}"
+							"raw": "{\n    \"input\": {\n        \"question\": \"\",\n        \"chat_history\": \"\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/chat/invoke",
@@ -91,7 +91,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"input\": \"What services does Promtior offer?\"\n}"
+							"raw": "{\n    \"input\": {\n        \"question\": \"What services does Promtior offer?\",\n        \"chat_history\": \"\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/chat/stream",

@@ -148,10 +148,11 @@
             inputEl.value = "";
             sendBtn.disabled = true;
 
-            const loadingEl = addMessage("Thinking...", "bot loading");
+            const botEl = addMessage("", "bot");
+            let fullResponse = "";
 
             try {
-                const res = await fetch("/chat/invoke", {
+                const res = await fetch("/chat/stream", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -161,13 +162,41 @@
                         }
                     }),
                 });
-                const data = await res.json();
-                loadingEl.textContent = data.output;
-                loadingEl.classList.remove("loading");
-                chatHistory.push({ role: "bot", text: data.output });
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            const data = line.slice(6).trim();
+                            if (!data) continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (typeof parsed === "string") {
+                                    fullResponse += parsed;
+                                    botEl.textContent = fullResponse;
+                                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+
+                if (!fullResponse) {
+                    botEl.textContent = "I couldn't generate a response. Please try again.";
+                }
+                chatHistory.push({ role: "bot", text: fullResponse });
             } catch (err) {
-                loadingEl.textContent = "Sorry, something went wrong. Please try again.";
-                loadingEl.classList.remove("loading");
+                botEl.textContent = "Sorry, something went wrong. Please try again.";
             }
 
             sendBtn.disabled = false;

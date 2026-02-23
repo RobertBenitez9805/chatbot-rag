@@ -1,3 +1,5 @@
+from pydantic import BaseModel, Field
+
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
@@ -6,9 +8,17 @@ from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 from app.config import OPENAI_API_KEY, CHAT_MODEL, EMBEDDING_MODEL, VECTORSTORE_PATH
 
+
+class ChatInput(BaseModel):
+    """Input schema for the chat chain."""
+    question: str = Field(description="The user's question")
+    chat_history: str = Field(default="", description="Previous conversation history")
+
 CONDENSE_TEMPLATE = """Given the following chat history and a follow-up question,
-rephrase the follow-up question to be a standalone question about Promtior.
-If the question is already standalone, return it unchanged.
+rephrase the follow-up question to be a standalone question.
+If the follow-up references something from the chat history (like "it", "they",
+"the company", "their services"), resolve the reference to make it standalone.
+If the question is already standalone or is a greeting/casual message, return it unchanged.
 
 Chat History:
 {chat_history}
@@ -17,12 +27,19 @@ Follow-up Question: {question}
 
 Standalone Question:"""
 
-PROMPT_TEMPLATE = """You are a helpful assistant for Promtior, an AI consulting company.
-Answer the question based only on the following context. If you cannot find
-the answer in the context, say "I don't have that information."
+PROMPT_TEMPLATE = """You are a friendly and helpful assistant for Promtior, an AI consulting company.
+
+Rules:
+- For greetings (hi, hello, hola, etc.), respond warmly and let them know you can answer questions about Promtior.
+- For questions about Promtior, answer based on the context provided below.
+- If the context doesn't contain the answer, say "I don't have that information about Promtior."
+- Keep responses conversational and natural.
 
 Context:
 {context}
+
+Chat History:
+{chat_history}
 
 Question: {standalone_question}
 
@@ -61,23 +78,30 @@ def create_chain():
     # Condense chat_history + question into a standalone question
     condense_chain = condense_prompt | llm | StrOutputParser()
 
-    # Use the standalone question to retrieve context and generate answer
-    def build_rag_input(standalone_question):
+    def process_input(input_dict):
+        """Condense the question, retrieve context, and build the final prompt input."""
+        chat_history = input_dict.get("chat_history", "")
+        question = input_dict["question"]
+
+        # Condense question with history
+        standalone_question = condense_chain.invoke({
+            "question": question,
+            "chat_history": chat_history,
+        })
+
+        # Retrieve relevant docs
         docs = retriever.invoke(standalone_question)
+
         return {
             "context": _format_docs(docs),
+            "chat_history": chat_history,
             "standalone_question": standalone_question,
         }
 
     chain = (
-        {
-            "question": lambda x: x["question"],
-            "chat_history": lambda x: x.get("chat_history", ""),
-        }
-        | condense_chain
-        | RunnableLambda(build_rag_input)
+        RunnableLambda(process_input)
         | answer_prompt
         | llm
         | StrOutputParser()
-    )
+    ).with_types(input_type=ChatInput)
     return chain
