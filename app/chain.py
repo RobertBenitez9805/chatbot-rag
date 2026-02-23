@@ -56,7 +56,7 @@ def _get_retriever():
         embeddings,
         allow_dangerous_deserialization=True,
     )
-    return vectorstore.as_retriever(search_kwargs={"k": 3})
+    return vectorstore.as_retriever(search_kwargs={"k": 5})
 
 
 def _format_docs(docs):

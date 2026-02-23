@@ -6,14 +6,26 @@ from langchain_community.vectorstores import FAISS
 from app.config import OPENAI_API_KEY, EMBEDDING_MODEL, PROMTIOR_URLS, VECTORSTORE_PATH
 
 
+def _clean_content(text):
+    """Remove excessive whitespace and blank lines from scraped content."""
+    import re
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    return text.strip()
+
+
 def ingest():
     """Load Promtior web pages, split into chunks, embed, and persist to FAISS."""
     loader = WebBaseLoader(PROMTIOR_URLS)
     documents = loader.load()
 
+    # Clean HTML noise from scraped content
+    for doc in documents:
+        doc.page_content = _clean_content(doc.page_content)
+
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=1000,
+        chunk_overlap=200,
     )
     chunks = splitter.split_documents(documents)
 
