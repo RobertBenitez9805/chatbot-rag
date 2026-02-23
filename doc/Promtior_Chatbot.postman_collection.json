@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "promtior-rag-chatbot",
+		"name": "Promtior RAG Chatbot",
+		"description": "API collection for the Promtior RAG Chatbot built with LangChain + LangServe",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Chat",
+			"item": [
+				{
+					"name": "What services does Promtior offer?",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"input\": \"What services does Promtior offer?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/invoke",
+							"host": ["{{base_url}}"],
+							"path": ["chat", "invoke"]
+						}
+					}
+				},
+				{
+					"name": "When was the company founded?",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"input\": \"When was the company founded?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/invoke",
+							"host": ["{{base_url}}"],
+							"path": ["chat", "invoke"]
+						}
+					}
+				},
+				{
+					"name": "Custom question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"input\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/invoke",
+							"host": ["{{base_url}}"],
+							"path": ["chat", "invoke"]
+						}
+					}
+				},
+				{
+					"name": "Stream response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"input\": \"What services does Promtior offer?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/stream",
+							"host": ["{{base_url}}"],
+							"path": ["chat", "stream"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Health & Docs",
+			"item": [
+				{
+					"name": "Root (redirect to UI)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						}
+					}
+				},
+				{
+					"name": "OpenAPI docs",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/docs",
+							"host": ["{{base_url}}"],
+							"path": ["docs"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
