@@ -12,5 +12,6 @@ VECTORSTORE_PATH = os.getenv("VECTORSTORE_PATH", "vectorstore")
 PROMTIOR_URLS = [
     "https://www.promtior.ai",
     "https://www.promtior.ai/service",
-    "https://cie.ort.edu.uy/emprendimientos/promptior"
+    "https://cie.ort.edu.uy/emprendimientos/promptior",
+    "https://cuti.org.uy/en/destacados/la-startup-uruguaya-promtior-fue-seleccionada-ante-100-empresas-latinoamericanas-para-participar-del-programa-microsoft-ai-latino-en-miami/"
 ]
